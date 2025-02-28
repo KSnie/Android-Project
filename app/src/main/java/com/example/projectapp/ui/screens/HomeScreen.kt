@@ -150,7 +150,7 @@ fun HomeScreen(
                     .fillMaxSize()
                     .background(
                         Brush.linearGradient(
-                            colors = listOf(Color(0xFFD7E8C2), Color(0xFF7F9167))
+                            colors = listOf(Color(0xFF7F9167), Color(0xFFD7E8C2))
                         )
                     )
                     .padding(16.dp),

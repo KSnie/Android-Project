@@ -12,7 +12,7 @@ import com.example.projectapp.model.Transaction
 
 @Composable
 fun TransactionItem(transaction: Transaction, isEnglish: Boolean) {
-    val amountColor = if (transaction.type == "Outcome") Color.Red else Color.Green
+    val amountColor = if (transaction.type == "Outcome") Color(0xFFA51D32 ) else Color(0xFF6B8E23)
 
     Column(modifier = Modifier.fillMaxWidth()) {
         Spacer(modifier = Modifier.height(8.dp))
