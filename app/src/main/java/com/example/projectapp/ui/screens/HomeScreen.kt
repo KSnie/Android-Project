@@ -10,16 +10,21 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.projectapp.model.transactions
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.projectapp.ProjectApplication
 import com.example.projectapp.ui.components.TransactionItem
+import com.example.projectapp.ui.viewmodel.TransactionViewModel
 
 @Composable
 fun HomeScreen(
@@ -28,11 +33,21 @@ fun HomeScreen(
     onThemeToggle: () -> Unit,
     onLanguageToggle: () -> Unit
 ) {
-    val totalIncome = transactions.filter { it.type == "Income" }
-        .sumOf { it.amount.replace("$", "").replace(",", "").toDoubleOrNull() ?: 0.0 }
+    // Get the repository from the Application class
+    val context = LocalContext.current
+    val application = context.applicationContext as ProjectApplication
 
-    val totalOutcome = transactions.filter { it.type == "Outcome" }
-        .sumOf { it.amount.replace("$", "").replace(",", "").toDoubleOrNull() ?: 0.0 }
+    // Initialize ViewModel with factory
+    val viewModel: TransactionViewModel = viewModel(
+        factory = TransactionViewModel.TransactionViewModelFactory(
+            application.repository
+        )
+    )
+
+    // Collect transaction data as state
+    val transactions by viewModel.allTransactions.collectAsState()
+    val totalIncome by viewModel.totalIncome.collectAsState()
+    val totalOutcome by viewModel.totalOutcome.collectAsState()
 
     Column(modifier = Modifier.padding(16.dp)) {
         Spacer(modifier = Modifier.height(30.dp))
@@ -160,6 +175,7 @@ fun HomeScreen(
 
         Spacer(modifier = Modifier.height(16.dp))
 
+        // Group transactions by date
         val groupedData = transactions.groupBy { it.date }
 
         LazyColumn(modifier = Modifier.weight(1f)) {

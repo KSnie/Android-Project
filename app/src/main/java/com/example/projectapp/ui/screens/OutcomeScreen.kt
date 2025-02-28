@@ -9,17 +9,33 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.projectapp.model.transaction_outcome
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.projectapp.ProjectApplication
 import com.example.projectapp.ui.components.TransactionItem
+import com.example.projectapp.ui.viewmodel.TransactionViewModel
 
 @Composable
 fun OutcomeScreen(isEnglish: Boolean, onBack: () -> Unit) {
+    // Get the repository from the Application class
+    val context = LocalContext.current
+    val application = context.applicationContext as ProjectApplication
+
+    // Initialize ViewModel with factory
+    val viewModel: TransactionViewModel = viewModel(
+        factory = TransactionViewModel.TransactionViewModelFactory(
+            application.repository
+        )
+    )
+
+    // Collect outcome transactions as state
+    val transactions by viewModel.outcomeTransactions.collectAsState()
+
     val pageSize = 7
     var currentPage by remember { mutableStateOf(0) }
-    val transactions = transaction_outcome.sortedBy { it.date }
     val totalPages = (transactions.size + pageSize - 1) / pageSize
     val paginatedTransactions = transactions.drop(currentPage * pageSize).take(pageSize)
 

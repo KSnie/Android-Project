@@ -7,7 +7,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.runtime.*
 import com.example.projectapp.navigation.Screen
-import com.example.projectapp.ui.MainScreen
+import com.example.projectapp.ui.MainScreenWithNavHost
 import com.example.projectapp.ui.theme.ProjectTheme
 
 class MainActivity : ComponentActivity() {
@@ -17,7 +17,7 @@ class MainActivity : ComponentActivity() {
             var isDarkTheme by remember { mutableStateOf(false) }
             var isEnglish by remember { mutableStateOf(true) }
             ProjectTheme(darkTheme = isDarkTheme) {
-                MainScreen(
+                MainScreenWithNavHost(
                     isDarkTheme = isDarkTheme,
                     isEnglish = isEnglish,
                     onThemeToggle = {

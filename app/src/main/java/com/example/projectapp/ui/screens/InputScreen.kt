@@ -1,30 +1,89 @@
 package com.example.projectapp.ui.screens
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
+import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.projectapp.ProjectApplication
 import com.example.projectapp.model.Transaction
+import com.example.projectapp.ui.viewmodel.TransactionViewModel
+import java.text.SimpleDateFormat
+import java.util.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun InputScreen(isEnglish: Boolean, onBack: () -> Unit, onConfirm: (Transaction) -> Unit) {
+    // Get the repository from the Application class
+    val context = LocalContext.current
+    val application = context.applicationContext as ProjectApplication
+
+    // Initialize ViewModel with factory
+    val viewModel: TransactionViewModel = viewModel(
+        factory = TransactionViewModel.TransactionViewModelFactory(
+            application.repository
+        )
+    )
+
     var name by remember { mutableStateOf("") }
     var value by remember { mutableStateOf("") }
     var selectedType by remember { mutableStateOf(if (isEnglish) "Outcome" else "รายจ่าย") }
     var expanded by remember { mutableStateOf(false) }
+
+    // Date selection state
+    val calendar = Calendar.getInstance()
+    var selectedDateMillis by remember { mutableStateOf(calendar.timeInMillis) }
+    var selectedDateText by remember {
+        val dateFormat = SimpleDateFormat("dd MMMM yyyy", Locale.ENGLISH)
+        mutableStateOf(dateFormat.format(Date(selectedDateMillis)))
+    }
+    var showDatePicker by remember { mutableStateOf(false) }
+
+    val datePickerState = rememberDatePickerState(
+        initialSelectedDateMillis = selectedDateMillis
+    )
+
     val transactionTypes = if (isEnglish)
         listOf("Income", "Outcome")
     else
         listOf("รายรับ", "รายจ่าย")
+
+    // Date picker dialog
+    if (showDatePicker) {
+        DatePickerDialog(
+            onDismissRequest = { showDatePicker = false },
+            confirmButton = {
+                TextButton(onClick = {
+                    datePickerState.selectedDateMillis?.let { dateMillis ->
+                        selectedDateMillis = dateMillis
+                        val dateFormat = SimpleDateFormat("dd MMMM yyyy", Locale.ENGLISH)
+                        selectedDateText = dateFormat.format(Date(dateMillis))
+                    }
+                    showDatePicker = false
+                }) {
+                    Text(if (isEnglish) "Confirm" else "ยืนยัน")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDatePicker = false }) {
+                    Text(if (isEnglish) "Cancel" else "ยกเลิก")
+                }
+            }
+        ) {
+            DatePicker(state = datePickerState)
+        }
+    }
 
     Column(
         modifier = Modifier
@@ -91,6 +150,37 @@ fun InputScreen(isEnglish: Boolean, onBack: () -> Unit, onConfirm: (Transaction)
             )
         }
 
+        // Date selection field
+        Column {
+            Text(
+                text = if (isEnglish) "Date" else "วันที่",
+                fontSize = 14.sp,
+                color = Color.Gray
+            )
+            TextField(
+                value = selectedDateText,
+                onValueChange = { },
+                readOnly = true,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { showDatePicker = true },
+                shape = RoundedCornerShape(16.dp),
+                textStyle = TextStyle(fontSize = 20.sp, fontWeight = FontWeight.Bold),
+                trailingIcon = {
+                    Icon(
+                        Icons.Default.DateRange,
+                        contentDescription = "Select date",
+                        modifier = Modifier.clickable { showDatePicker = true }
+                    )
+                },
+                colors = TextFieldDefaults.textFieldColors(
+                    focusedIndicatorColor = Color.Transparent,
+                    unfocusedIndicatorColor = Color.Transparent,
+                    disabledIndicatorColor = Color.Transparent
+                )
+            )
+        }
+
         Column {
             Text(
                 text = if (isEnglish) "Type" else "ประเภท",
@@ -139,28 +229,27 @@ fun InputScreen(isEnglish: Boolean, onBack: () -> Unit, onConfirm: (Transaction)
         Button(
             onClick = {
                 if (name.isNotEmpty() && value.isNotEmpty()) {
-                    val formattedValue = value.replace("[^\\d.]".toRegex(), "")
-                    val transaction = Transaction(
-                        date = "07 April",
+                    // Get the type in English format for storage
+                    val type = if (isEnglish) {
+                        if (selectedType == "Income") "Income" else "Outcome"
+                    } else {
+                        if (selectedType == "รายรับ") "Income" else "Outcome"
+                    }
+
+                    // Insert transaction into database using ViewModel
+                    viewModel.insertTransaction(
                         title = name,
-                        type = if (isEnglish) {
-                            if (selectedType == "Income") "Income" else "Outcome"
-                        } else {
-                            if (selectedType == "รายรับ") "Income" else "Outcome"
-                        },
-                        amount = if (selectedType == "Outcome" || selectedType == "รายจ่าย")
-                            "-$$formattedValue"
-                        else
-                            "$$formattedValue",
-                        tax = if (isEnglish)
-                            "Tax $$formattedValue"
-                        else
-                            "ภาษี $$formattedValue"
+                        amount = value,
+                        type = type,
+                        date = Date(selectedDateMillis), // Pass the selected date
+                        isEnglish = isEnglish
                     )
 
-                    println("Transaction created: $transaction")
+                    // Clear the form
+                    name = ""
+                    value = ""
 
-                    onConfirm(transaction)
+                    // Navigate back
                     onBack()
                 }
             },
