@@ -107,7 +107,7 @@ fun HomeScreen(onNavigateToIncome: () -> Unit, onThemeToggle: () -> Unit) {
             modifier = Modifier.fillMaxWidth()
         ) {
             Column {
-                        Text(text = "Sawasdee", fontSize = 35.sp)
+                        Text(text = "wwww", fontSize = 35.sp)
             Text(text = "Kasidis", fontSize = 45.sp)
         }
 
