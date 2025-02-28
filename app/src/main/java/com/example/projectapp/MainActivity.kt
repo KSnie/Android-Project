@@ -108,7 +108,7 @@ fun HomeScreen(onNavigateToIncome: () -> Unit, onThemeToggle: () -> Unit) {
         ) {
             Column {
                 Text(text = "Hello,", fontSize = 35.sp)
-                Text(text = "Kasidis", fontSize = 45.sp)
+                Text(text = "KasidisS", fontSize = 45.sp)
             }
 
             Row(
