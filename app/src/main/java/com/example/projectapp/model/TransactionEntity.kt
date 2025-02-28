@@ -16,6 +16,7 @@ data class TransactionEntity(
     // Convert Entity to UI model
     fun toTransaction(): Transaction {
         return Transaction(
+            id = this.id,
             date = this.date,
             title = this.title,
             type = this.type,
@@ -28,6 +29,7 @@ data class TransactionEntity(
 // Extension function to convert UI model to Entity
 fun Transaction.toEntity(): TransactionEntity {
     return TransactionEntity(
+        id = this.id,
         date = this.date,
         title = this.title,
         type = this.type,

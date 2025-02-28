@@ -1,4 +1,3 @@
-
 package com.example.projectapp.ui
 
 import androidx.compose.animation.*
@@ -18,12 +17,10 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.example.projectapp.model.Transaction
 import com.example.projectapp.navigation.Screen
 import com.example.projectapp.playButtonSound
-import com.example.projectapp.ui.screens.HomeScreen
-import com.example.projectapp.ui.screens.IncomeScreen
-import com.example.projectapp.ui.screens.InputScreen
-import com.example.projectapp.ui.screens.OutcomeScreen
+import com.example.projectapp.ui.screens.*
 
 @Composable
 fun MainScreenWithNavHost(
@@ -34,6 +31,9 @@ fun MainScreenWithNavHost(
 ) {
     val navController = rememberNavController()
     val context = LocalContext.current
+
+    // State to hold the transaction being edited
+    var transactionToEdit by remember { mutableStateOf<Transaction?>(null) }
 
     Scaffold(
         bottomBar = {
@@ -81,7 +81,12 @@ fun MainScreenWithNavHost(
                         navController.navigate("income")
                     },
                     onThemeToggle = onThemeToggle,
-                    onLanguageToggle = onLanguageToggle
+                    onLanguageToggle = onLanguageToggle,
+                    onNavigateToEdit = { transaction ->
+                        playButtonSound(context)
+                        transactionToEdit = transaction
+                        navController.navigate("edit")
+                    }
                 )
             }
             composable("income") {
@@ -90,6 +95,11 @@ fun MainScreenWithNavHost(
                     onBack = {
                         playButtonSound(context)
                         navController.navigateUp()
+                    },
+                    onNavigateToEdit = { transaction ->
+                        playButtonSound(context)
+                        transactionToEdit = transaction
+                        navController.navigate("edit")
                     }
                 )
             }
@@ -112,8 +122,26 @@ fun MainScreenWithNavHost(
                     onBack = {
                         playButtonSound(context)
                         navController.navigateUp()
+                    },
+                    onNavigateToEdit = { transaction ->
+                        playButtonSound(context)
+                        transactionToEdit = transaction
+                        navController.navigate("edit")
                     }
                 )
+            }
+            composable("edit") {
+                // Only show the edit screen if we have a transaction to edit
+                transactionToEdit?.let { transaction ->
+                    EditTransactionScreen(
+                        transaction = transaction,
+                        isEnglish = isEnglish,
+                        onBack = {
+                            playButtonSound(context)
+                            navController.navigateUp()
+                        }
+                    )
+                }
             }
         }
     }

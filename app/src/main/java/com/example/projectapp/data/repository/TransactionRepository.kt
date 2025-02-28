@@ -25,8 +25,8 @@ class TransactionRepository(private val transactionDao: TransactionDao) {
 
     val totalOutcome: Flow<Double?> = transactionDao.getTotalOutcome()
 
-    suspend fun insertTransaction(transaction: Transaction) {
-        transactionDao.insertTransaction(transaction.toEntity())
+    suspend fun insertTransaction(transaction: Transaction): Long {
+        return transactionDao.insertTransaction(transaction.toEntity())
     }
 
     suspend fun updateTransaction(transaction: TransactionEntity) {

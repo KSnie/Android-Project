@@ -6,12 +6,12 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
@@ -23,6 +23,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.projectapp.ProjectApplication
+import com.example.projectapp.model.Transaction
 import com.example.projectapp.ui.components.TransactionItem
 import com.example.projectapp.ui.viewmodel.TransactionViewModel
 
@@ -31,7 +32,8 @@ fun HomeScreen(
     isEnglish: Boolean,
     onNavigateToIncome: () -> Unit,
     onThemeToggle: () -> Unit,
-    onLanguageToggle: () -> Unit
+    onLanguageToggle: () -> Unit,
+    onNavigateToEdit: (Transaction) -> Unit = {}
 ) {
     // Get the repository from the Application class
     val context = LocalContext.current
@@ -48,6 +50,10 @@ fun HomeScreen(
     val transactions by viewModel.allTransactions.collectAsState()
     val totalIncome by viewModel.totalIncome.collectAsState()
     val totalOutcome by viewModel.totalOutcome.collectAsState()
+
+    // For confirmation dialog
+    var showDeleteConfirmation by remember { mutableStateOf(false) }
+    var transactionToDelete by remember { mutableStateOf<Transaction?>(null) }
 
     Column(modifier = Modifier.padding(16.dp)) {
         Spacer(modifier = Modifier.height(30.dp))
@@ -128,7 +134,7 @@ fun HomeScreen(
                     )
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
-                        "$${"%,.2f".format(totalOutcome)}",
+                        "$${"%,.2f".format(totalOutcome ?: 0.0)}",
                         fontSize = 24.sp,
                         fontWeight = FontWeight.Bold,
                         color = Color.White
@@ -164,7 +170,7 @@ fun HomeScreen(
                     )
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
-                        "$${"%,.2f".format(totalIncome)}",
+                        "$${"%,.2f".format(totalIncome ?: 0.0)}",
                         fontSize = 24.sp,
                         fontWeight = FontWeight.Bold,
                         color = Color.White
@@ -190,10 +196,49 @@ fun HomeScreen(
                     )
                 }
                 items(transactions) { transaction ->
-                    TransactionItem(transaction, isEnglish)
+                    TransactionItem(
+                        transaction = transaction,
+                        isEnglish = isEnglish,
+                        onEdit = { onNavigateToEdit(transaction) },
+                        onDelete = {
+                            transactionToDelete = transaction
+                            showDeleteConfirmation = true
+                        }
+                    )
                     Spacer(modifier = Modifier.height(8.dp))
                 }
             }
         }
+    }
+
+    // Delete confirmation dialog
+    if (showDeleteConfirmation && transactionToDelete != null) {
+        AlertDialog(
+            onDismissRequest = { showDeleteConfirmation = false },
+            title = { Text(if (isEnglish) "Confirm Delete" else "ยืนยันการลบ") },
+            text = {
+                Text(
+                    if (isEnglish)
+                        "Are you sure you want to delete \"${transactionToDelete?.title}\"?"
+                    else
+                        "คุณแน่ใจหรือไม่ว่าต้องการลบ \"${transactionToDelete?.title}\"?"
+                )
+            },
+            confirmButton = {
+                Button(onClick = {
+                    transactionToDelete?.let { transaction ->
+                        viewModel.deleteTransaction(transaction)
+                    }
+                    showDeleteConfirmation = false
+                }) {
+                    Text(if (isEnglish) "Delete" else "ลบ")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDeleteConfirmation = false }) {
+                    Text(if (isEnglish) "Cancel" else "ยกเลิก")
+                }
+            }
+        )
     }
 }

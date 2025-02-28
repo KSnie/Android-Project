@@ -3,8 +3,10 @@ package com.example.projectapp.ui.screens
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -15,11 +17,16 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.projectapp.ProjectApplication
+import com.example.projectapp.model.Transaction
 import com.example.projectapp.ui.components.TransactionItem
 import com.example.projectapp.ui.viewmodel.TransactionViewModel
 
 @Composable
-fun OutcomeScreen(isEnglish: Boolean, onBack: () -> Unit) {
+fun OutcomeScreen(
+    isEnglish: Boolean,
+    onBack: () -> Unit,
+    onNavigateToEdit: (Transaction) -> Unit = {}
+) {
     // Get the repository from the Application class
     val context = LocalContext.current
     val application = context.applicationContext as ProjectApplication
@@ -33,6 +40,10 @@ fun OutcomeScreen(isEnglish: Boolean, onBack: () -> Unit) {
 
     // Collect outcome transactions as state
     val transactions by viewModel.outcomeTransactions.collectAsState()
+
+    // For confirmation dialog
+    var showDeleteConfirmation by remember { mutableStateOf(false) }
+    var transactionToDelete by remember { mutableStateOf<Transaction?>(null) }
 
     val pageSize = 7
     var currentPage by remember { mutableStateOf(0) }
@@ -68,7 +79,15 @@ fun OutcomeScreen(isEnglish: Boolean, onBack: () -> Unit) {
                     )
                 }
                 items(transactions) { transaction ->
-                    TransactionItem(transaction, isEnglish)
+                    TransactionItem(
+                        transaction = transaction,
+                        isEnglish = isEnglish,
+                        onEdit = { onNavigateToEdit(transaction) },
+                        onDelete = {
+                            transactionToDelete = transaction
+                            showDeleteConfirmation = true
+                        }
+                    )
                     Spacer(modifier = Modifier.height(8.dp))
                 }
             }
@@ -102,5 +121,36 @@ fun OutcomeScreen(isEnglish: Boolean, onBack: () -> Unit) {
                 Text(if (isEnglish) "Next" else "ถัดไป")
             }
         }
+    }
+
+    // Delete confirmation dialog
+    if (showDeleteConfirmation && transactionToDelete != null) {
+        AlertDialog(
+            onDismissRequest = { showDeleteConfirmation = false },
+            title = { Text(if (isEnglish) "Confirm Delete" else "ยืนยันการลบ") },
+            text = {
+                Text(
+                    if (isEnglish)
+                        "Are you sure you want to delete \"${transactionToDelete?.title}\"?"
+                    else
+                        "คุณแน่ใจหรือไม่ว่าต้องการลบ \"${transactionToDelete?.title}\"?"
+                )
+            },
+            confirmButton = {
+                Button(onClick = {
+                    transactionToDelete?.let { transaction ->
+                        viewModel.deleteTransaction(transaction)
+                    }
+                    showDeleteConfirmation = false
+                }) {
+                    Text(if (isEnglish) "Delete" else "ลบ")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDeleteConfirmation = false }) {
+                    Text(if (isEnglish) "Cancel" else "ยกเลิก")
+                }
+            }
+        )
     }
 }

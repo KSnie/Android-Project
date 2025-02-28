@@ -5,6 +5,8 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.example.projectapp.data.repository.TransactionRepository
 import com.example.projectapp.model.Transaction
+import com.example.projectapp.model.TransactionEntity
+import com.example.projectapp.model.toEntity
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
@@ -93,7 +95,39 @@ class TransactionViewModel(private val repository: TransactionRepository) : View
         }
     }
 
-    // Factory class to instantiate the ViewModel with a repository
+    /**
+     * Delete a transaction
+     */
+    fun deleteTransaction(transaction: Transaction) {
+        viewModelScope.launch {
+            // Direct conversion to entity with the id
+            val entity = transaction.toEntity()
+            repository.deleteTransaction(entity)
+        }
+    }
+
+    /**
+     * Update an existing transaction
+     */
+    fun updateTransaction(updatedTransaction: Transaction, originalTransaction: Transaction) {
+        viewModelScope.launch {
+            // Create updated entity with the original ID
+            val updatedEntity = TransactionEntity(
+                id = originalTransaction.id,
+                date = updatedTransaction.date,
+                title = updatedTransaction.title,
+                type = updatedTransaction.type,
+                amount = updatedTransaction.amount,
+                tax = updatedTransaction.tax
+            )
+
+            repository.updateTransaction(updatedEntity)
+        }
+    }
+
+    /**
+     * Factory class for creating TransactionViewModel instances
+     */
     class TransactionViewModelFactory(private val repository: TransactionRepository) : ViewModelProvider.Factory {
         override fun <T : ViewModel> create(modelClass: Class<T>): T {
             if (modelClass.isAssignableFrom(TransactionViewModel::class.java)) {
