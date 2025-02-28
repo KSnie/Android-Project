@@ -107,12 +107,12 @@ fun HomeScreen(onNavigateToIncome: () -> Unit, onThemeToggle: () -> Unit) {
             modifier = Modifier.fillMaxWidth()
         ) {
             Column {
-                Text(text = "Hello,", fontSize = 35.sp)
-                Text(text = "Kasidis", fontSize = 45.sp)
-            }
+                        Text(text = "Sawasdee", fontSize = 35.sp)
+            Text(text = "Kasidis", fontSize = 45.sp)
+        }
 
-            Row(
-                horizontalArrangement = Arrangement.Center,
+        Row(
+            horizontalArrangement = Arrangement.Center,
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.fillMaxWidth()
             ) {
