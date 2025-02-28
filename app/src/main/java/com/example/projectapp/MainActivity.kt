@@ -1,5 +1,7 @@
 package com.example.projectapp
 
+import android.content.Context
+import android.media.MediaPlayer
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -23,6 +25,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.projectapp.ui.theme.ProjectTheme
+import androidx.compose.ui.platform.LocalContext
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -30,19 +33,36 @@ class MainActivity : ComponentActivity() {
         setContent {
             var isDarkTheme by remember { mutableStateOf(false) }
             ProjectTheme(darkTheme = isDarkTheme) {
-                MainScreen(isDarkTheme, onThemeToggle = { isDarkTheme = !isDarkTheme })
+                MainScreen(
+                    isDarkTheme = isDarkTheme,
+                    onThemeToggle = { 
+                        playButtonSound(this)
+                        isDarkTheme = !isDarkTheme 
+                    }
+                )
             }
         }
+    }
+}
+
+
+fun playButtonSound(context: Context) {
+    val mediaPlayer = MediaPlayer.create(context, R.raw.button)
+    mediaPlayer?.start()
+    mediaPlayer?.setOnCompletionListener {
+        it.release() // Release resources when playback is complete
     }
 }
 
 @Composable
 fun MainScreen(isDarkTheme: Boolean, onThemeToggle: () -> Unit) {
     var selectedScreen by remember { mutableStateOf(Screen.Home) }
+    val context = LocalContext.current
 
     Scaffold(
         bottomBar = {
             BottomNavigationBar(selectedScreen) { screen ->
+                playButtonSound(context)
                 selectedScreen = screen
             }
         }
@@ -50,17 +70,30 @@ fun MainScreen(isDarkTheme: Boolean, onThemeToggle: () -> Unit) {
         Box(modifier = Modifier.padding(innerPadding)) {
             when (selectedScreen) {
                 Screen.Home -> HomeScreen(
-                    onNavigateToIncome = { selectedScreen = Screen.Income },
+                    onNavigateToIncome = { 
+                        playButtonSound(context)
+                        selectedScreen = Screen.Income 
+                    },
                     onThemeToggle = onThemeToggle
                 )
-                Screen.Income -> IncomeScreen { selectedScreen = Screen.Home }
+                Screen.Income -> IncomeScreen { 
+                    playButtonSound(context)
+                    selectedScreen = Screen.Home 
+                }
                 Screen.Input -> InputScreen(
-                    onBack = { selectedScreen = Screen.Home },
+                    onBack = { 
+                        playButtonSound(context)
+                        selectedScreen = Screen.Home 
+                    },
                     onConfirm = { transaction ->
+                        playButtonSound(context)
                         println(transaction)
                     }
                 )
-                Screen.Outcome -> OutcomeScreen { selectedScreen = Screen.Home }
+                Screen.Outcome -> OutcomeScreen { 
+                    playButtonSound(context)
+                    selectedScreen = Screen.Home 
+                }
             }
         }
     }
