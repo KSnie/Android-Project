@@ -3,23 +3,17 @@ package com.example.projectapp.ui
 import androidx.compose.animation.*
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.NavigationBar
-import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.navigation.NavBackStackEntry
-import androidx.navigation.NavGraph.Companion.findStartDestination
-import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.example.projectapp.model.Transaction
-import com.example.projectapp.navigation.Screen
+import com.example.projectapp.navigation.DeepLinkData
 import com.example.projectapp.playButtonSound
+import com.example.projectapp.ui.components.BottomNavBar
 import com.example.projectapp.ui.screens.*
 
 @Composable
@@ -27,13 +21,32 @@ fun MainScreenWithNavHost(
     isDarkTheme: Boolean,
     isEnglish: Boolean,
     onThemeToggle: () -> Unit,
-    onLanguageToggle: () -> Unit
+    onLanguageToggle: () -> Unit,
+    deepLinkData: DeepLinkData? = null
 ) {
     val navController = rememberNavController()
     val context = LocalContext.current
 
+    // For passing deep link data to InputScreen
+    var initialTitle by remember { mutableStateOf<String?>(null) }
+    var initialAmount by remember { mutableStateOf<String?>(null) }
+    var initialType by remember { mutableStateOf<String?>(null) }
+
     // State to hold the transaction being edited
     var transactionToEdit by remember { mutableStateOf<Transaction?>(null) }
+
+    // Handle deep linking
+    LaunchedEffect(deepLinkData) {
+        deepLinkData?.let {
+            // Store parameters for when InputScreen renders
+            initialTitle = it.title
+            initialAmount = it.amount
+            initialType = it.type
+
+            // Navigate to destination
+            navController.navigate(it.destination)
+        }
+    }
 
     Scaffold(
         bottomBar = {
@@ -89,6 +102,7 @@ fun MainScreenWithNavHost(
                     }
                 )
             }
+
             composable("income") {
                 IncomeScreen(
                     isEnglish = isEnglish,
@@ -103,9 +117,13 @@ fun MainScreenWithNavHost(
                     }
                 )
             }
+
             composable("input") {
                 InputScreen(
                     isEnglish = isEnglish,
+                    initialTitle = initialTitle,
+                    initialAmount = initialAmount,
+                    initialType = initialType,
                     onBack = {
                         playButtonSound(context)
                         navController.navigateUp()
@@ -116,6 +134,7 @@ fun MainScreenWithNavHost(
                     }
                 )
             }
+
             composable("outcome") {
                 OutcomeScreen(
                     isEnglish = isEnglish,
@@ -130,6 +149,7 @@ fun MainScreenWithNavHost(
                     }
                 )
             }
+
             composable("edit") {
                 // Only show the edit screen if we have a transaction to edit
                 transactionToEdit?.let { transaction ->
@@ -144,68 +164,5 @@ fun MainScreenWithNavHost(
                 }
             }
         }
-    }
-}
-
-@Composable
-fun BottomNavBar(
-    navController: NavHostController,
-    isEnglish: Boolean,
-    onItemClicked: () -> Unit
-) {
-    val currentRoute = navController.currentBackStackEntryAsState().value?.destination?.route ?: "home"
-
-    NavigationBar {
-        NavigationBarItem(
-            selected = currentRoute == "income",
-            onClick = {
-                if (currentRoute != "income") {
-                    onItemClicked()
-                    navController.navigate("income") {
-                        popUpTo(navController.graph.findStartDestination().id) {
-                            saveState = true
-                        }
-                        launchSingleTop = true
-                        restoreState = true
-                    }
-                }
-            },
-            label = { Text(if (isEnglish) "Income" else "รายรับ") },
-            icon = {}
-        )
-        NavigationBarItem(
-            selected = currentRoute == "input",
-            onClick = {
-                if (currentRoute != "input") {
-                    onItemClicked()
-                    navController.navigate("input") {
-                        popUpTo(navController.graph.findStartDestination().id) {
-                            saveState = true
-                        }
-                        launchSingleTop = true
-                        restoreState = true
-                    }
-                }
-            },
-            label = { Text(if (isEnglish) "Input" else "ป้อนข้อมูล") },
-            icon = {}
-        )
-        NavigationBarItem(
-            selected = currentRoute == "outcome",
-            onClick = {
-                if (currentRoute != "outcome") {
-                    onItemClicked()
-                    navController.navigate("outcome") {
-                        popUpTo(navController.graph.findStartDestination().id) {
-                            saveState = true
-                        }
-                        launchSingleTop = true
-                        restoreState = true
-                    }
-                }
-            },
-            label = { Text(if (isEnglish) "Outcome" else "รายจ่าย") },
-            icon = {}
-        )
     }
 }

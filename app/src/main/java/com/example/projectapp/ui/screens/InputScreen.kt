@@ -24,7 +24,14 @@ import java.util.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun InputScreen(isEnglish: Boolean, onBack: () -> Unit, onConfirm: (Transaction) -> Unit) {
+fun InputScreen(
+    isEnglish: Boolean,
+    initialTitle: String? = null,
+    initialAmount: String? = null,
+    initialType: String? = null,
+    onBack: () -> Unit,
+    onConfirm: (Transaction) -> Unit
+) {
     // Get the repository from the Application class
     val context = LocalContext.current
     val application = context.applicationContext as ProjectApplication
@@ -36,9 +43,33 @@ fun InputScreen(isEnglish: Boolean, onBack: () -> Unit, onConfirm: (Transaction)
         )
     )
 
-    var name by remember { mutableStateOf("") }
-    var value by remember { mutableStateOf("") }
-    var selectedType by remember { mutableStateOf(if (isEnglish) "Outcome" else "รายจ่าย") }
+    // Use initialValues from deep links if available
+    var name by remember { mutableStateOf(initialTitle ?: "") }
+
+    var value by remember {
+        mutableStateOf(
+            if (initialAmount != null) {
+                val cleanAmount = initialAmount.replace("[^\\d.]".toRegex(), "")
+                if (cleanAmount.isNotEmpty()) {
+                    "$${"%,.2f".format(cleanAmount.toDoubleOrNull() ?: 0.0)}"
+                } else ""
+            } else ""
+        )
+    }
+
+    var selectedType by remember {
+        mutableStateOf(
+            when {
+                initialType != null && isEnglish ->
+                    if (initialType.equals("income", ignoreCase = true)) "Income" else "Outcome"
+                initialType != null && !isEnglish ->
+                    if (initialType.equals("income", ignoreCase = true)) "รายรับ" else "รายจ่าย"
+                isEnglish -> "Outcome"
+                else -> "รายจ่าย"
+            }
+        )
+    }
+
     var expanded by remember { mutableStateOf(false) }
 
     // Date selection state
