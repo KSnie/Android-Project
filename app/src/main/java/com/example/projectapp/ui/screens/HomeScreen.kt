@@ -102,7 +102,7 @@ fun HomeScreen(
         ) {
             Column {
                 Text(text = if (isEnglish) "Hello" else "สวัสดี", fontSize = 35.sp)
-                Text(text = "Kasidis", fontSize = 45.sp)
+                Text(text = "User", fontSize = 45.sp)
             }
 
             Row(
