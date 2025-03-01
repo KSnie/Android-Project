@@ -152,6 +152,27 @@ fun HomeScreen(
         ) {
             Box(
                 modifier = Modifier.fillMaxSize().background(
+                    Brush.linearGradient(colors = listOf(Color(0xFF7F9167), Color(0xFFD7E8C2)))
+                ).padding(16.dp),
+                contentAlignment = Alignment.CenterStart
+            ) {
+                Column {
+                    Text(text = if (isEnglish) "Income" else "รายรับ", fontSize = 18.sp, color = Color.White)
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text("$${"%,.2f".format(totalIncome ?: 0.0)}", fontSize = 24.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+
+        Card(
+            shape = RoundedCornerShape(16.dp),
+            modifier = Modifier.fillMaxWidth().height(100.dp)
+        ) {
+            Box(
+                modifier = Modifier.fillMaxSize().background(
                     Brush.linearGradient(colors = listOf(Color(0xFF5E1818), Color(0xFFCF7E7E)))
                 ).padding(16.dp),
                 contentAlignment = Alignment.CenterStart
