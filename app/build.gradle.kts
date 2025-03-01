@@ -75,4 +75,6 @@ dependencies {
 
     // Coroutines
     implementation(libs.kotlinx.coroutines.android)
+
+    implementation("com.google.firebase:firebase-messaging")
 }
